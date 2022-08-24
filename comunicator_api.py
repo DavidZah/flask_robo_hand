@@ -4,6 +4,9 @@ import sys
 import glob
 import serial
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+import json
+
 result = {
     "Sequence_number" : [],
     "AcX":[],
@@ -92,14 +95,15 @@ def serial_ports():
 
 
 if __name__ == '__main__':
-    N = 600
-    T = 1.0 / 800.0
+    N = 1500
     x = serial_ports()
     arm = Arm(x[0])
-    for i in range(10):
-        for i in range(1500):
+    for i in range(20):
+        for i in range(N):
             arm.read_data()
-        plt.plot(arm.results["Sequence_number"][-N:],arm.results["AcY"][-N:])
-        plt.show()
-
-        
+        data = arm.results["AcY"][-N:]
+        w = savgol_filter(data, 101, 2)
+        plt.plot(arm.results["Sequence_number"][-N:],w)
+        #plt.show()
+    with open('json_data_medium.json', 'w') as outfile:
+        json.dump(arm.results, outfile)
